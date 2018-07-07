@@ -106,3 +106,4 @@ venv.bak/
 # user add
 test/
 config/
+text_vec.pkl
