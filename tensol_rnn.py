@@ -37,8 +37,6 @@ print("min_num:", min_num)
 for sample in sample_nums:
     diff_num = int(sample[1] - min_num)
     print("クラス%d 削除サンプル数: %d (%0.2f％)" % (sample[0], diff_num, (diff_num/sample[1])*100))
-    if diff_num == 0:
-        continue
     indexes = [i for i, l in enumerate(label) if l == sample[0]]
     del_indexes = random.sample(indexes, min_num)
     X.extend([data[i] for i in indexes])
