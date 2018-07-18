@@ -66,6 +66,8 @@ N_TEST = len(x_test)  # テスト用データ数
 
 print("N_CLASSES = %s" % N_CLASSES)
 print("N_DATA = %s" % N_DATA)
+
+
 # モデルの構築
 x = tf.placeholder(tf.float32, [None, LEN_SEQ, N_INPUTS])  # 入力データ
 t = tf.placeholder(tf.int32, [None])  # 教師データ
@@ -90,6 +92,11 @@ accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))  # 精度
 
 # 学習の実行
 sess = tf.Session()
+
+if tf.gfile.Exists('./logdir'):
+    tf.gfile.DeleteRecursively('./logdir') # ./logdirが存在する場合削除
+writer = tf.summary.FileWriter('./logdir', sess.graph) # 保存先を./logdirに設定
+
 sess.run(tf.global_variables_initializer())
 i = 0
 for _ in range(N_STEPS):
