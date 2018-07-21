@@ -21,6 +21,7 @@ import torch.optim as optim #最適化関数
 import torch.nn.functional as F #ネットワーク用の様々な関数
 import torch.utils.data #データセット読み込み関連
 import torchvision #画像関連
+import util
 
 class RNN(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
@@ -42,39 +43,13 @@ class RNN(nn.Module):
     def initHidden(self):
         return torch.zeros(1, self.hidden_size)
 
-# ベクトルの読み込み
-data = pickle.loads(open('./text_vec.pkl', 'rb').read())
-label = pickle.loads(open('./label_vec.pkl', 'rb').read())
-label_count = len(collections.Counter([str(v) for v in label]))
-
-# データ作成
-X = []
-y = []
-
-# データ数を合わせる
-c = collections.Counter(label)
-sample_nums = c.most_common()
-print("sample_nums:", sample_nums)
-
-min_num = np.min([s[1] for s in sample_nums])
-print("min_num:", min_num)
-
-for sample in sample_nums:
-    diff_num = int(sample[1] - min_num)
-    print("クラス%d 削除サンプル数: %d (%0.2f％)" % (sample[0], diff_num, (diff_num/sample[1])*100))
-    indexes = [i for i, l in enumerate(label) if l == sample[0]]
-    del_indexes = random.sample(indexes, min_num)
-    X.extend([data[i] for i in indexes])
-    y.extend([label[i] for i in indexes])
-X = np.array(X)
-y = np.array(y)
-
-
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.20, random_state=random.randint(0, 100))
+dataloader = util.dataloader()
+dataloader.normalize()
+X_train, X_test, y_train, y_test = dataloader.dataset() 
 
 
 n_hidden = 128
-model = RNN(30, n_hidden, label_count)
+model = RNN(30, n_hidden, dataloader.label_count())
 
 train = torch.utils.data.TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
 train_loader = torch.utils.data.DataLoader(train, batch_size=100, shuffle=True)
