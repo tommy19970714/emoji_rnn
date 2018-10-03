@@ -5,15 +5,11 @@ import numpy as np
 from gensim.models import word2vec
 import re
 import numpy as np
+import csv
+import emoji as emoji_lib
 
-# word2vecモデルの読み込み
-wordModel = word2vec.Word2Vec.load("../emoji_models/emoji_word2vec_wakati.model")
 # macabの読み込み
 tagger = MeCab.Tagger('-Owakati -d /usr/lib/mecab/dic/mecab-ipadic-neologd')
-
-# check
-print(wordModel["テスト"].shape)
-print(type(wordModel["テスト"]))
 
 # ノイズ除去関数
 def textNormalize(text):
@@ -24,6 +20,19 @@ def textNormalize(text):
     text = re.sub("…", "", text)
     return ''.join(text.split())
 
+def remove_emojis(str):
+    return ''.join(c for c in str if c not in emoji_lib.UNICODE_EMOJI)
+
+def extract_emojis(str):
+  return ''.join(c for c in str if c in emoji_lib.UNICODE_EMOJI)
+
+# emojiの正規表現
+emoji_re = re.compile(u'['
+ u'\U0001F300-\U0001F64F'
+ u'\U0001F680-\U0001F6FF'
+ u'\u2600-\u26FF\u2700-\u27BF]', 
+ re.UNICODE)
+
 # db load
 db_connector = db.DB()
 tweets = db_connector.getTweets(offset=0, limit=10000)
@@ -31,8 +40,11 @@ tweets = db_connector.getTweets(offset=0, limit=10000)
 # emoji_index load
 emoji_index = pickle.loads(open('./emoji_index.pkl', 'rb').read())
 
-text_vec = []
-label_vec = []
+# write file open
+f = open("./text_label_raw.tsv", "w", newline="")
+writer = csv.writer(f, delimiter="\t", quotechar='"', quoting=csv.QUOTE_MINIMAL)
+
+
 counter = 0
 while tweets:
     for tweet in tweets:
@@ -45,15 +57,8 @@ while tweets:
             if len(parsed.split()) > 30:
                 continue
             
-            # emojiの正規表現
-            emoji = re.compile(u'['
-             u'\U0001F300-\U0001F64F'
-             u'\U0001F680-\U0001F6FF'
-             u'\u2600-\u26FF\u2700-\u27BF]', 
-             re.UNICODE)
-            match = re.findall(emoji, line)
-            
             # emojiが一つのみのテキストを使用
+            match = re.findall(emoji_re, text)
             hit_emoji = ""
             if len(match) == 1:
                 if match[0] in emoji_index:
@@ -63,22 +68,15 @@ while tweets:
                     continue
             else:
                 continue
-            no_emoji_text = re.sub(emoji, '', parsed)
+            no_emoji_text = remove_emojis(text)
+            no_emoji_text = re.sub(emoji_re, '', no_emoji_text)
             words = no_emoji_text.split()
+            
+            writer.writerow([text, hit_emoji])
+            print([no_emoji_text, hit_emoji])
 
-            vec = np.zeros((30,200))
-            for i,word in enumerate(words):
-                if word in wordModel:
-                    vec[i] = wordModel[word]
-             
-            text_vec.append(vec)
-            #print(vec)
-            label_vec.append(hit_emoji)
-            #print(hit_emoji)
     counter += len(tweets)
     tweets = db_connector.getTweets(offset=counter, limit=10000)
     print(counter)
-    if counter >= 100000: #1000000:
+    if counter >= 1000: #1000000:
         break
-open('text_vec.pkl', 'wb').write(pickle.dumps(text_vec) )
-open('label_vec.pkl', 'wb').write(pickle.dumps(label_vec) )

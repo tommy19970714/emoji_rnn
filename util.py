@@ -9,10 +9,10 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 
 class dataloader:
-    def __init__(self):
+    def __init__(self, dataPath='./text_vec.pkl', labelPath='./label_vec.pkl'):
         # ベクトルの読み込み
-        self.data = pickle.loads(open('./text_vec.pkl', 'rb').read())
-        self.label = pickle.loads(open('./label_vec.pkl', 'rb').read())
+        self.data = pickle.loads(open(dataPath, 'rb').read())
+        self.label = pickle.loads(open(labelPath, 'rb').read())
         # データ作成
         self.X = []
         self.y = []
@@ -42,4 +42,6 @@ class dataloader:
 
     def label_count(self):
         return len(collections.Counter([str(v) for v in self.label]))
-
+    
+    def rawdata(self):
+        return self.X, self.y

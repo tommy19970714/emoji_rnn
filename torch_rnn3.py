@@ -50,8 +50,11 @@ class EncoderRNN(nn.Module):
     def forward(self, input, hidden):
         print("input=",input)
         print("input type=",type(input))
-        embedded = self.embedding(input).view(1, 1, -1)
-        output = embedded
+        #embedded = self.embedding(input).view(1, 1, -1)
+        #output = embedded
+        #output, hidden = self.gru(output, hidden)
+        output = input[np.newaxis, :]
+        print("output shape", output.shape)
         output, hidden = self.gru(output, hidden)
         return output, hidden
 
@@ -217,7 +220,7 @@ def trainIters(encoder, decoder, n_iters, print_every=1000, plot_every=100, lear
     #showPlot(plot_losses)
 
 hidden_size = 200
-encoder1 = EncoderRNN(200*30, hidden_size).to(device)
+encoder1 = EncoderRNN(200, hidden_size).to(device)
 attn_decoder1 = AttnDecoderRNN(hidden_size, 1, dropout_p=0.1).to(device)
 
 trainIters(encoder1, attn_decoder1, 75000, print_every=5000)

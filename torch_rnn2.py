@@ -48,7 +48,7 @@ dataloader.normalize()
 X_train, X_test, y_train, y_test = dataloader.dataset() 
 
 
-n_hidden = 128
+n_hidden = 200
 model = RNN(30, n_hidden, dataloader.label_count())
 
 train = torch.utils.data.TensorDataset(torch.from_numpy(X_train), torch.from_numpy(y_train))
@@ -74,7 +74,7 @@ for epoch in range(2):  # loop over the dataset multiple times
 
         # Variableに変形
         # wrap them in Variable
-        inputs, labels = Variable(inputs), Variable(labels)
+        inputs, labels = Variable(inputs.float()), Variable(labels)
 
         # optimizerの初期化
         # zero the parameter gradients
